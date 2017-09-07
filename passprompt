@@ -1,0 +1,82 @@
+#!/usr/bin/perl
+
+### to use install:
+## GPG (home brew is easiest option :  brew install gpg)
+## install pass (https://www.passwordstore.org, again homebrew : brew install pass)
+## install https://releases.gpgtools.org/nightlies/ - this provides GPG gui tools - most importantly password prompts
+##### when unlocking the keychain.
+
+#  now do :
+# gpg --gen-key
+# gpg -k | egrep -A 1 pub ## shows the pub keychain
+# pass init "<pub key>"
+# pass insert <name> # to create a password
+
+use strict;
+use File::Spec;
+use File::Find;
+
+my $pass_store = File::Spec->catfile($ENV{HOME},'.password-store');
+
+sub get_password_list
+{
+    my @list;
+    File::Find::find sub
+    {
+        return 0 if ($_ =~ m/^\./ or -d $File::Find::name or $_ !~ m/\.gpg/);
+        my $name = $File::Find::name;
+        $name =~ s"$pass_store"";
+        $name =~ s/\.gpg//;
+        chomp $name;
+        push @list,$name;
+
+    }, $pass_store;
+
+    return @list;
+}
+
+sub run_osascript
+{
+    my ($script) = @_;
+    return `osascript -e '$script'`;
+}
+
+sub get_list_response
+{
+    my @list = @_;
+
+    my $app;
+    $app = 'iTerm';
+    my $osascript = 'tell application "SystemUIServer"
+    activate
+    set the option_list to {';
+    foreach my $pass (@list)
+    {
+        $osascript .= '"'.$pass.'",'
+    }
+    chop $osascript; # remote trailing ,
+    $osascript .= '}
+    set the_selection to choose from list option_list with prompt "Select which password:" default items {"'.$list[0].'"}
+    end tell
+
+    tell application "'.$app.'"
+    activate
+    end tell
+
+    the_selection
+';
+
+    return run_osascript($osascript);
+}
+
+my $password_file = get_list_response(get_password_list())."\n";
+$password_file =~ s/\n//g;
+$password_file = File::Spec->catfile($pass_store,$password_file.'.gpg');
+exit unless (-f $password_file);
+# print "ls $password_file\n";
+my $command = '/usr/local/bin/gpg -d '.$password_file.' 2>/dev/null';
+# print $command."\n";
+my @pass_lines = `$command`;
+my $pass_result = join '',@pass_lines;
+$pass_result =~ s/[\s\n]+//g;
+print "$pass_result\n";
