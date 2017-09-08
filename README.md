@@ -34,3 +34,5 @@ Now create a keyboard shortcut in iTerm 2:
 * Set the action to "run coprocess"
 * Set the third field to the path where you put passprompt.
 * Close the preferences window, and use your shortcut.
+
+You can configure how the GPGTools work in the System Preferences using the GPG Suite icon.
