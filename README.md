@@ -36,3 +36,16 @@ Now create a keyboard shortcut in iTerm 2:
 * Close the preferences window, and use your shortcut.
 
 You can configure how the GPGTools work in the System Preferences using the GPG Suite icon.
+
+You may need to configure a user-agent in your ~/.gnupg/gpg.conf file in order to make the GUI
+pin entry dialog box to work.  If you are not getting prompted, try running :
+
+/usr/local/bin/gpg -d ~/.password-store/<any password file>
+
+If this prompt you in iTerm for your password with a Curses or other text style prompt, the passprompt script
+is not going to work for you.  To fix this you need to edit ~/.gnupg/gpg.conf and add/modify these lines:
+
+    use-agent
+    agent-program /usr/local/MacGPG2/libexec/pinentry-mac.app/Contents/MacOS/pinentry-mac
+
+Try the test again to verify you see a GUI dialog.
