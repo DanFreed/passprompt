@@ -16,7 +16,12 @@ use strict;
 use File::Spec;
 use File::Find;
 
-my $pass_store = File::Spec->catfile($ENV{HOME},'.password-store');
+my $pass_store;
+if (defined $ENV{'PASSWORD_STORE_DIR'}) {
+    $pass_store = $ENV{PASSWORD_STORE_DIR};
+} else {
+    $pass_store = File::Spec->catfile($ENV{HOME},'.password-store');
+}
 
 sub get_password_list
 {
