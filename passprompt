@@ -59,9 +59,7 @@ sub get_list_response
     set the_selection to choose from list option_list with prompt "Select which password:" default items {"'.$list[0].'"}
     end tell
 
-    tell application "'.$app.'"
-    activate
-    end tell
+    do shell script "open -a '.$app.'"
 
     the_selection
 ';
