@@ -18,19 +18,29 @@ use File::Find;
 
 my $pass_store = File::Spec->catfile($ENV{HOME},'.password-store');
 
+sub preprocess
+{
+    return sort { $a cmp $b } @_;
+}
+
+my @list;
+sub wanted
+{
+    return 0 if ($_ =~ m/^\./ or -d $File::Find::name or $_ !~ m/\.gpg/);
+    my $name = $File::Find::name;
+    $name =~ s"$pass_store"";
+    $name =~ s/\.gpg//;
+    chomp $name;
+    push @list,$name;
+}
+
 sub get_password_list
 {
-    my @list;
-    File::Find::find sub
+    File::Find::find(
     {
-        return 0 if ($_ =~ m/^\./ or -d $File::Find::name or $_ !~ m/\.gpg/);
-        my $name = $File::Find::name;
-        $name =~ s"$pass_store"";
-        $name =~ s/\.gpg//;
-        chomp $name;
-        push @list,$name;
-
-    }, $pass_store;
+        preprocess => \&preprocess,
+        wanted => \&wanted,
+    }, $pass_store);
 
     return @list;
 }
